@@ -65,3 +65,19 @@ CREATE TABLE post_logs (
     post_id INT, author_id INT, deleted_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ); 
 
+-- F01: Đăng ký thành viên 
+
+DELIMITER $$
+CREATE PROCEDURE sp_add_user (
+    IN  p_username VARCHAR(50),
+    IN  p_password VARCHAR(255),
+    IN  p_email    VARCHAR(100),
+    OUT r_user_id  INT
+)
+BEGIN
+    INSERT INTO users (username, password, email) 
+    VALUES (p_username, p_password, p_email);
+    
+    SET r_user_id = LAST_INSERT_ID();
+END$$
+DELIMITER ; 
