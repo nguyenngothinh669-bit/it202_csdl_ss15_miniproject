@@ -198,7 +198,38 @@ LEFT JOIN likes l ON u.user_id = l.user_id
 LEFT JOIN comments c ON u.user_id = c.user_id
 GROUP BY u.user_id, u.username; 
 
+-- F09: Gợi ý kết bạn (Mutual Friends) 
 
+DELIMITER $$
+CREATE PROCEDURE sp_suggest_friends (
+    IN p_user_id INT
+)
+BEGIN
+    -- Bước 1: Lấy danh sách bạn bè hiện tại
+    WITH current_friends AS (
+        SELECT friend_id AS fid FROM friends WHERE user_id = p_user_id AND status = 'accepted'
+        UNION
+        SELECT user_id AS fid FROM friends WHERE friend_id = p_user_id AND status = 'accepted'
+    ),
+    -- Bước 2: Tìm bạn của bạn
+    friends_of_friends AS (
+        SELECT f.friend_id AS fof_id FROM friends f JOIN current_friends cf ON f.user_id = cf.fid WHERE f.status = 'accepted'
+        UNION
+        SELECT f.user_id AS fof_id FROM friends f JOIN current_friends cf ON f.friend_id = cf.fid WHERE f.status = 'accepted'
+    )
+    -- Bước 3: Thống kê số lượng bạn chung
+    SELECT 
+        fof.fof_id AS suggested_user_id,
+        u.username AS suggested_username,
+        COUNT(*)   AS mutual_friends_count
+    FROM friends_of_friends fof
+    JOIN users u ON fof.fof_id = u.user_id
+    WHERE fof.fof_id != p_user_id
+      AND fof.fof_id NOT IN (SELECT fid FROM current_friends)
+    GROUP BY fof.fof_id, u.username
+    ORDER BY mutual_friends_count DESC, u.username ASC;
+END$$
+DELIMITER ; 
 
 
 
