@@ -168,6 +168,21 @@ SELECT
     created_at AS join_date
 FROM users;   
 
+-- F07: Xem bài viết theo từ khóa 
+
+-- Khởi tạo chỉ mục Full-text Search
+ALTER TABLE posts ADD FULLTEXT idx_posts_content_fts (content);
+
+DELIMITER $$
+CREATE PROCEDURE sp_search_posts (
+    IN p_keyword VARCHAR(100)
+)
+BEGIN
+    SELECT post_id, user_id, content, like_count, comment_count, created_at
+    FROM posts
+    WHERE MATCH(content) AGAINST(p_keyword IN NATURAL LANGUAGE MODE);
+END$$
+DELIMITER ; 
 
 
 
