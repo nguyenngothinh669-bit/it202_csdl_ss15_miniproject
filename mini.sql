@@ -142,4 +142,21 @@ DELIMITER ;
 
 -- F05: Chấp nhận / Hủy kết bạn 
 
+DELIMITER $$
+CREATE PROCEDURE sp_respond_friend_request (
+    IN p_friendship_id INT,
+    IN p_action VARCHAR(20)
+)
+BEGIN
+    IF p_action = 'accept' THEN
+        UPDATE friends 
+        SET status = 'accepted' 
+        WHERE friendship_id = p_friendship_id;
+    ELSEIF p_action = 'reject' THEN
+        DELETE FROM friends
+        WHERE friendship_id = p_friendship_id;
+    END IF;
+END$$
+DELIMITER ; 
+
 
