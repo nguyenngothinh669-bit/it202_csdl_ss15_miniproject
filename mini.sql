@@ -247,7 +247,41 @@ BEGIN
 END$$
 DELIMITER ; 
 
+-- F11: Quản lý xóa tài khoản 
 
+DELIMITER $$
+CREATE PROCEDURE sp_delete_user_account (
+    IN p_user_id INT
+)
+BEGIN
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+        
+        -- Bước 1: Xóa toàn bộ lịch sử quan hệ bạn bè
+        DELETE FROM friends WHERE user_id = p_user_id OR friend_id = p_user_id;
+        
+        -- Bước 2: Xóa toàn bộ các lượt thích do User này tương tác
+        DELETE FROM likes WHERE user_id = p_user_id;
+        
+        -- Bước 3: Xóa các bình luận do User này viết trên toàn hệ thống
+        DELETE FROM comments WHERE user_id = p_user_id;
+        
+        -- Bước 4: Xóa toàn bộ bài viết do User này làm tác giả 
+        -- (Tại bước này, nhờ ON DELETE CASCADE của bảng con, các bình luận/lượt thích của người khác nằm trên bài viết của User này cũng sẽ tự động được giải phóng sạch sẽ)
+        DELETE FROM posts WHERE user_id = p_user_id;
+        
+        -- Bước 5: Cuối cùng, tiến hành xóa tài khoản gốc tại bảng users
+        DELETE FROM users WHERE user_id = p_user_id;
+        
+    COMMIT;
+END$$
+DELIMITER ;
 
 
 
