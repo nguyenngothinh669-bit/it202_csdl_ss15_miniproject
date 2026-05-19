@@ -81,3 +81,65 @@ BEGIN
     SET r_user_id = LAST_INSERT_ID();
 END$$
 DELIMITER ; 
+
+-- F02 : Đăng bài viết 
+DELIMITER $$
+CREATE PROCEDURE sp_create_post (
+    IN  p_user_id INT,
+    IN  p_content TEXT,
+    OUT r_post_id INT
+)
+BEGIN
+    INSERT INTO posts (user_id, content) 
+    VALUES (p_user_id, p_content);
+    
+    SET r_post_id = LAST_INSERT_ID();
+END$$
+DELIMITER ; 
+
+-- F03: Thích / Hủy thích bài viết 
+
+DELIMITER $$
+
+-- 1. Trigger tăng số lượt thích
+CREATE TRIGGER trg_like_insert AFTER INSERT ON likes FOR EACH ROW
+BEGIN
+    UPDATE posts SET like_count = like_count + 1 WHERE post_id = NEW.post_id;
+END$$
+
+-- 2. Trigger giảm số lượt thích
+CREATE TRIGGER trg_like_delete AFTER DELETE ON likes FOR EACH ROW
+BEGIN
+    UPDATE posts SET like_count = IF(like_count > 0, like_count - 1, 0) WHERE post_id = OLD.post_id;
+END$$
+
+-- 3. Stored Procedure xử lý hành vi ấn nút Like (Toggle)
+CREATE PROCEDURE sp_toggle_post_like (
+    IN p_user_id INT,
+    IN p_post_id INT
+)
+BEGIN
+    IF EXISTS (SELECT 1 FROM likes WHERE user_id = p_user_id AND post_id = p_post_id) THEN
+        DELETE FROM likes WHERE user_id = p_user_id AND post_id = p_post_id;
+    ELSE
+        INSERT INTO likes (user_id, post_id) VALUES (p_user_id, p_post_id);
+    END IF;
+END$$
+DELIMITER ; 
+
+-- F04: Gửi lời mời kết bạn 
+DELIMITER $$
+CREATE PROCEDURE sp_send_friend_request (
+    IN p_user_id   INT,
+    IN p_friend_id INT
+)
+BEGIN
+    
+    INSERT INTO friends (user_id, friend_id, status) 
+    VALUES (p_user_id, p_friend_id, 'pending');
+END$$
+DELIMITER ;  
+
+-- F05: Chấp nhận / Hủy kết bạn 
+
+
