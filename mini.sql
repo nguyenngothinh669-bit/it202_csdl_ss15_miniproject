@@ -1,4 +1,3 @@
--- KHỞI TẠO CƠ SỞ DỮ LIỆU NỀN TẢNG
 CREATE DATABASE IF NOT EXISTS mini_social_network ; 
 USE mini_social_network;
 
@@ -46,7 +45,7 @@ CREATE TABLE friends (
     CONSTRAINT chk_status CHECK (status IN ('pending', 'accepted')),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (friend_id) REFERENCES users(user_id),
-    -- MySQL 8+ Functional Index: Chặn trùng lặp đảo chiều (A-B và B-A)
+    
     UNIQUE KEY idx_unique_friendship ((LEAST(user_id, friend_id)), (GREATEST(user_id, friend_id)))
 );
 
@@ -231,7 +230,22 @@ BEGIN
 END$$
 DELIMITER ; 
 
+-- F10: Quản lý xóa bài viết 
 
+DELIMITER $$
+
+CREATE TRIGGER trg_audit_post_delete AFTER DELETE ON posts FOR EACH ROW
+BEGIN
+    INSERT INTO post_logs (post_id, author_id) VALUES (OLD.post_id, OLD.user_id);
+END$$
+CREATE PROCEDURE sp_delete_post (
+    IN p_user_id INT,
+    IN p_post_id INT
+)
+BEGIN
+    DELETE FROM posts WHERE post_id = p_post_id AND user_id = p_user_id;
+END$$
+DELIMITER ; 
 
 
 
