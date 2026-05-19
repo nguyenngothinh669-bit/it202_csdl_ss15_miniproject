@@ -182,7 +182,26 @@ BEGIN
     FROM posts
     WHERE MATCH(content) AGAINST(p_keyword IN NATURAL LANGUAGE MODE);
 END$$
-DELIMITER ; 
+DELIMITER ;  
+
+-- F08: Báo cáo hoạt động 
+CREATE OR REPLACE VIEW vw_user_activity_stats AS
+SELECT 
+    u.user_id,
+    u.username,
+    COUNT(DISTINCT p.post_id) AS total_posts,
+    COUNT(DISTINCT l.like_id) AS total_likes_given,
+    COUNT(DISTINCT c.comment_id) AS total_comments_written
+FROM users u
+LEFT JOIN posts p ON u.user_id = p.user_id
+LEFT JOIN likes l ON u.user_id = l.user_id
+LEFT JOIN comments c ON u.user_id = c.user_id
+GROUP BY u.user_id, u.username; 
+
+
+
+
+
 
 
 
