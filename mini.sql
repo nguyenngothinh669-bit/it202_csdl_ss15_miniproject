@@ -159,4 +159,16 @@ BEGIN
 END$$
 DELIMITER ; 
 
+-- F06: Xem thông tin người dùng 
+CREATE VIEW vw_user_profiles AS
+SELECT 
+    user_id,
+    username,
+    email,
+    created_at AS join_date
+FROM users;   
+
+
+
+
 
